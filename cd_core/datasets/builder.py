@@ -21,9 +21,9 @@ def build_pipeline(cfgs, default_args=None):
     transformers = []
     for cfg in cfgs:
         if PIPELINES.get(cfg['type']):
-            transformer = build_from_cfg(cfg, PIPELINES)
+            transformer = build_from_cfg(cfg, PIPELINES, default_args=default_args)
         else:
-            transformer = build_from_cfg(cfg, A, mode='module')
+            transformer = build_from_cfg(cfg, A, default_args=default_args, mode='module')
         transformers.append(transformer)
     pipeline = A.Compose(transformers, additional_targets={'image1': 'image'})
     return pipeline
