@@ -1,4 +1,4 @@
-# Modified from https://github.com/open-mmlab/mmcv
+# Modified from https://github.com/Media-Smart/vedaseg
 import ast
 import os.path as osp
 import platform

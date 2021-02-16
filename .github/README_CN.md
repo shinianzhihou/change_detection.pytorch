@@ -2,6 +2,16 @@
 
 一个基于pytorch，主要用于变化检测的框架。
 
+
+
+## 其他
+
+### 模块说明
+
+#### transformers (pipelines)
+
+数据增强transformers基于Albumentations，因为其包含较多数据增强的api且能较好地解决变化检测paired input的数据增强问题。
+
 ### 设计思路
 
 - 以好用为目的，能不自己写的就不自己写，能优雅的尽量优雅
@@ -15,3 +25,4 @@
   - 将一般不用修改的，只是修改参数的集中在一起，放在runner下面
 - 为什么registry时是复数DATASETS而不是单数DATASET，因为想将registry后的东西看作一个collections，包含所有的DATASET
 - 为什么数据增强取名为pipelines而不是transformers，因为transformer之后肯定会用来在变化检测中灌水
+- 定义函数的参数时候，为什么不加union来说明参数类型，因为追求简单且尽可能保证有更高效的说明文档，也是方便自己增加函数时不用强迫症的也写上

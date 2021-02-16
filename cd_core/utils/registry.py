@@ -157,48 +157,68 @@ class Registry:
 
         return _register
 
+def build_from_cfg(cfg, src, default_args=None, mode='registry'):
+    if mode == 'registry':
+        return build_from_registry(cfg,  src, default_args=default_args)
+    elif mode == 'module':
+        return build_from_module(cfg, src, default_args=default_args)
+    else:
+        raise ValueError('Mode {} is not supported currently'.format(mode))
 
-def build_from_cfg(cfg, registry, default_args=None):
+
+def build_from_registry(cfg, registry, default_args=None):
     """Build a module from config dict.
-
     Args:
         cfg (dict): Config dict. It should at least contain the key "type".
         registry (:obj:`Registry`): The registry to search the type from.
         default_args (dict, optional): Default initialization arguments.
-
     Returns:
-        object: The constructed object.
+        obj: The constructed object.
     """
-    if not isinstance(cfg, dict):
-        raise TypeError(f'cfg must be a dict, but got {type(cfg)}')
-    if 'type' not in cfg:
-        if default_args is None or 'type' not in default_args:
-            raise KeyError(
-                '`cfg` or `default_args` must contain the key "type", '
-                f'but got {cfg}\n{default_args}')
-    if not isinstance(registry, Registry):
-        raise TypeError('registry must be an mmcv.Registry object, '
-                        f'but got {type(registry)}')
-    if not (isinstance(default_args, dict) or default_args is None):
-        raise TypeError('default_args must be a dict or None, '
-                        f'but got {type(default_args)}')
-
+    assert isinstance(cfg, dict) and 'type' in cfg
+    assert isinstance(default_args, dict) or default_args is None
     args = cfg.copy()
-
-    if default_args is not None:
-        for name, value in default_args.items():
-            args.setdefault(name, value)
-
     obj_type = args.pop('type')
     if isinstance(obj_type, str):
         obj_cls = registry.get(obj_type)
         if obj_cls is None:
-            raise KeyError(
-                f'{obj_type} is not in the {registry.name} registry')
+            raise KeyError('{} is not in the {} registry'.format(
+                obj_type, registry.name))
     elif inspect.isclass(obj_type):
         obj_cls = obj_type
     else:
-        raise TypeError(
-            f'type must be a str or valid type, but got {type(obj_type)}')
+        raise TypeError('type must be a str or valid type, but got {}'.format(
+            type(obj_type)))
+    if default_args is not None:
+        for name, value in default_args.items():
+            args.setdefault(name, value)
+    return obj_cls(**args)
 
+
+def build_from_module(cfg, module, default_args=None):
+    """Build a module from config dict.
+    Args:
+        cfg (dict): Config dict. It should at least contain the key "type".
+        module (:obj:`module`): The module to search the type from.
+        default_args (dict, optional): Default initialization arguments.
+    Returns:
+        obj: The constructed object.
+    """
+    assert isinstance(cfg, dict) and 'type' in cfg
+    assert isinstance(default_args, dict) or default_args is None
+    args = cfg.copy()
+    obj_type = args.pop('type')
+    if isinstance(obj_type, str):
+        obj_cls = getattr(module, obj_type)
+        if obj_cls is None:
+            raise KeyError('{} is not in the {} module'.format(
+                obj_type, module))
+    elif inspect.isclass(obj_type):
+        obj_cls = obj_type
+    else:
+        raise TypeError('type must be a str or valid type, but got {}'.format(
+            type(obj_type)))
+    if default_args is not None:
+        for name, value in default_args.items():
+            args.setdefault(name, value)
     return obj_cls(**args)
