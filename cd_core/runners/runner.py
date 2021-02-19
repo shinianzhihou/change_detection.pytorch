@@ -8,6 +8,7 @@ from cd_core.utils import get_dist_info, get_priority, build_from_cfg
 from .hooks import Hook
 from .builder import HOOKS
 
+@HOOKS.register_module()
 class BaseRunner(metaclass=ABCMeta):
     """Base runner.
     """
@@ -91,7 +92,6 @@ class BaseRunner(metaclass=ABCMeta):
         """int: Maximum training iterations."""
         return self._max_iters
 
-
     def register_hook(self, hook, priority='NORMAL'):
         """Register a hook into the hook list.
 
@@ -146,7 +146,19 @@ class BaseRunner(metaclass=ABCMeta):
         for hook in self._hooks:
             getattr(hook, fn_name)(self)
 
-    def run_iter(self,data_batch, train_mode, **kwargs):
+    ## register different hooks
+    def register_optimizer_hook(self, optimizer_config):
+        if optimizer_config is None:
+            return
+        if isinstance(optimizer_config, dict):
+            optimizer_config.setdefault('type', 'OptimizerHook')
+            hook = build_from_cfg(optimizer_config, HOOKS)
+        else:
+            hook = optimizer_config
+        self.register_hook(hook)
+
+    ## make the train and val process
+    def run_iter(self, data_batch, train_mode, **kwargs):
 
         if self.batch_processor is not None:
             outputs = self.batch_processor(
@@ -158,7 +170,7 @@ class BaseRunner(metaclass=ABCMeta):
             outputs = self.model.val_step(data_batch, self.optimizer, **kwargs)
 
         self.outputs = outputs
-    
+
     def train(self, data_loader, **kwargs):
         self.model.train()
         self.mode = 'train'
@@ -190,3 +202,4 @@ class BaseRunner(metaclass=ABCMeta):
             self.call_hook('after_val_iter')
 
         self.call_hook('after_val_epoch')
+
