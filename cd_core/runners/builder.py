@@ -15,6 +15,7 @@ def build_optimizer(cfg, default_args=None):
     return optimizer
     
 def build_lr_scheduler(cfg, default_args=None):
+    """"Build lr scheduler."""
     if LR_SCHEDULERS.get(cfg['type']):
         lr_scheduler = build_from_cfg(cfg, LR_SCHEDULERS, default_args=default_args)
     else:
